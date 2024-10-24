@@ -13,7 +13,7 @@
 	$: if (data?.pageData) {
 		content = data.pageData.content || '';
 		qrCodeDataUrl = data.pageData.qr_code || '';
-		pageUrl = `https://sayqr.vercel.app/page/${data.pageData._id}`;
+		pageUrl = `https://sayqr-frontend.vercel.app/page/${data.pageData._id}`;
 	}
 
 	const generateQRCode = async () => {
