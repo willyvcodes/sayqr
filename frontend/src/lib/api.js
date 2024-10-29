@@ -23,19 +23,10 @@ export const get_page_by_id = async (page_id) => {
 };
 
 // Update page content by ID
-export const update_page_by_id = async (content, page_id) => {
-    return await fetch(`${API_BASE_URL}/api/page/` + page_id + '/content', {
+export const update_page_by_id = async (page_id, content) => {
+    return await fetch(`${API_BASE_URL}/api/page/` + page_id, {
         method: 'PUT',
         headers: headers,
-        body: JSON.stringify({ content })
-    });
-};
-
-// Update QR code by page ID
-export const update_qr_code_by_id = async (qr_code, page_id) => {
-    return await fetch(`${API_BASE_URL}/api/page/` + page_id + '/qr_code', {
-        method: 'PUT',
-        headers: headers,
-        body: JSON.stringify(qr_code)
+        body: JSON.stringify(content)
     });
 };

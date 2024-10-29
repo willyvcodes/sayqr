@@ -1,80 +1,98 @@
 <script>
+	import { get_page_by_id, update_page_by_id } from '$lib/api';
 	import { goto } from '$app/navigation';
-	import { update_page_by_id, update_qr_code_by_id } from '$lib/api';
 	import QRCode from 'qrcode';
+	import { getModalStore } from '@skeletonlabs/skeleton';
+	import { browser } from '$app/environment';
+
+	const modalStore = getModalStore();
 
 	export let data;
 
 	let content = '';
 	let qrCodeDataUrl = '';
 	let pageUrl = '';
-	let showQRCode = false;
 
 	$: if (data?.pageData) {
 		content = data.pageData.content || '';
-		qrCodeDataUrl = data.pageData.qr_code || '';
-		pageUrl = `https://sayqr.vercel.app/page/${data.pageData._id}`;
+		if (browser) {
+			pageUrl = `${window.location.origin}/page/${data.pageData._id}`;
+		}
 	}
 
 	const generateQRCode = async () => {
 		try {
 			qrCodeDataUrl = await QRCode.toDataURL(pageUrl);
-			await update_qr_code_by_id(qrCodeDataUrl, data.pageData._id);
+			console.log('Generated QR Code Data URL:', qrCodeDataUrl);
 		} catch (err) {
 			console.error('Error generating QR code:', err);
 		}
 	};
 
-	const toggleQRCode = (event) => {
-		event.preventDefault();
-		showQRCode = !showQRCode;
+	const showQRCodeModal = async () => {
+		if (!qrCodeDataUrl) {
+			await generateQRCode();
+		}
+		const qrCodeModalSettings = {
+			type: 'alert',
+			title: 'QR Code',
+			body: `<img src="${qrCodeDataUrl}" alt="QR Code" class="w-40 h-40 mb-4 mx-auto" />`,
+			backdropClasses: 'bg-black bg-opacity-50',
+			modalClasses: 'bg-surface-800 p-6 rounded-lg shadow-lg text-center',
+			buttonTextConfirm: 'Close'
+		};
+		modalStore.trigger(qrCodeModalSettings);
 	};
 
-	const updateContent = async () => {
-		try {
-			const response = await update_page_by_id(content, data.pageData.id);
-			if (!response.ok) {
-				console.error('Failed to update content');
+	const showEditContentModal = () => {
+		const editContentModalSettings = {
+			type: 'prompt',
+			title: 'Edit Content',
+			body: 'Provide new content for the page:',
+			value: content,
+			backdropClasses: 'bg-black bg-opacity-50',
+			modalClasses: 'bg-surface-800 p-6 rounded-lg shadow-lg text-center',
+			buttonTextConfirm: 'Save',
+			buttonTextCancel: 'Cancel',
+			response: async (newContent) => {
+				if (newContent && newContent !== content) {
+					try {
+						const updateResponse = await update_page_by_id(data.pageData._id, {
+							content: newContent
+						});
+						if (updateResponse.ok) {
+							content = newContent;
+							console.log('Content updated successfully');
+						} else {
+							console.error(
+								'Error updating content:',
+								updateResponse.status,
+								updateResponse.statusText
+							);
+						}
+					} catch (err) {
+						console.error('Error updating content:', err);
+					}
+				}
 			}
-		} catch (err) {
-			console.error('Error updating content:', err);
-		}
+		};
+		modalStore.trigger(editContentModalSettings);
 	};
 </script>
 
-<section class="flex flex-col items-center justify-center min-h-screen bg-surface-500 p-6">
-	<p
-		class="text-white text-xl sm:text-3xl md:text-4xl lg:text-6xl font-light text-center leading-relaxed"
-	>
-		{content}
-	</p>
-
-	<div class="mt-auto flex justify-between w-full p-4">
-		<button on:click={updateContent} class="text-blue-500 hover:underline text-base sm:text-2lg">
-			Update Content
-		</button>
-
-		<button on:click={() => goto('/')} class="text-white text-base sm:text-2lg">Home</button>
-
-		{#if qrCodeDataUrl}
-			<button on:click={toggleQRCode} class="text-blue-500 hover:underline text-base sm:text-2lg">
-				{#if showQRCode}
-					Hide QR Code
-				{:else}
-					Show QR Code
-				{/if}
-			</button>
-		{:else}
-			<button on:click={generateQRCode} class="text-blue-500 hover:underline text-base sm:text-2lg">
-				Create QR Code
-			</button>
-		{/if}
+<section class="min-h-screen flex flex-col justify-between bg-surface-900 p-6">
+	<div class="flex-grow flex items-center justify-center">
+		<p class="text-5xl font-light text-primary-300 text-center leading-relaxed">
+			{content}
+		</p>
 	</div>
-
-	{#if showQRCode && qrCodeDataUrl}
-		<div class="mt-6">
-			<img src={qrCodeDataUrl} alt="QR Code" class="mx-auto" />
-			<p class="text-gray-400 mt-2 text-center">Scan this code to visit the page.</p>
-		</div>
-	{/if}
+	<div class="flex justify-between items-center mt-8 w-full max-w-3xl mx-auto">
+		<button on:click={() => goto('/')} class="text-primary-300 hover:underline"> Home </button>
+		<button on:click={showQRCodeModal} class="text-primary-300 hover:underline">
+			Show QR Code
+		</button>
+		<button on:click={showEditContentModal} class="text-primary-300 hover:underline">
+			Edit Content
+		</button>
+	</div>
 </section>

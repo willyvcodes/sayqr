@@ -14,13 +14,11 @@ class PageCreateSchema(BaseModel):
 
 class PageUpdateSchema(BaseModel):
     content: Optional[str] = None
-    qr_code: Optional[str] = None
 
 
 class PageResponseSchema(BaseModel):
     id: str = Field(..., alias="_id")
     content: str
-    qr_code: Optional[str] = None
     created_at: datetime
 
 
@@ -34,7 +32,6 @@ async def create_page(page: PageCreateSchema):
             "_id": page_id,
             "content": page.content,
             "created_at": datetime.now(timezone.utc),
-            "qr_code": None,
         }
         await db.pages.insert_one(new_page)
         return new_page
@@ -61,35 +58,21 @@ async def get_page_by_id(id: str):
         )
 
 
-@router.put("/api/page/{page_id}/content", response_model=PageResponseSchema)
-async def update_page_content(page_id: str, content: str):
+@router.put("/api/page/{page_id}", response_model=PageResponseSchema)
+async def update_page_content(page_id: str, updated_page: PageUpdateSchema):
+    page_data = {"content": updated_page.content}
     try:
-        result = await db.pages.update_one(
-            {"_id": page_id}, {"$set": {"content": content}}
-        )
+        result = await db.pages.update_one({"_id": page_id}, {"$set": page_data})
         if result.matched_count == 0:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Page not found"
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Page with ID: {page_id} not found",
             )
 
-        updated_page = await db.pages.find_one({"_id": page_id})
-        return updated_page
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Server error: {e}",
-        )
-
-
-@router.put("/api/page/{page_id}/qr_code", response_model=PageResponseSchema)
-async def update_qr_code(page_id: str, qr_code: str):
-    try:
-        result = await db.pages.update_one(
-            {"_id": page_id}, {"$set": {"qr_code": qr_code}}
-        )
-        if result.matched_count == 0:
+        if result.modified_count == 0:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Page not found"
+                status_code=status.HTTP_304_NOT_MODIFIED,
+                detail=f"Page with ID: {page_id} was not updated",
             )
 
         updated_page = await db.pages.find_one({"_id": page_id})
