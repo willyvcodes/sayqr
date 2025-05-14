@@ -2,7 +2,7 @@
 
 A modern web application that allows users to create custom pages with text and images, then instantly share them via QR codes. Perfect for events, classrooms, restaurants, or anywhere you need to share information quickly and elegantly.
 
-![SayQR Demo](https://sayqr.vercel.app/)
+Demo (https://sayqr.vercel.app/)
 
 ## ✨ Features
 
