@@ -4,6 +4,7 @@
 	import QRCode from 'qrcode';
 	import { getModalStore } from '@skeletonlabs/skeleton';
 	import { browser } from '$app/environment';
+	import { token } from '$lib/auth.js';
 
 	const modalStore = getModalStore();
 
@@ -12,20 +13,32 @@
 	let content = '';
 	let qrCodeDataUrl = '';
 	let pageUrl = '';
+	let images = [];
+	let isOwner = false;
 
 	$: if (data?.pageData) {
 		content = data.pageData.content || '';
+		images = data.pageData.images || [];
 		if (browser) {
 			pageUrl = `${window.location.origin}/page/${data.pageData._id}`;
+			const currentToken = localStorage.getItem('token');
+			if (currentToken) {
+				const payload = JSON.parse(atob(currentToken.split('.')[1]));
+				isOwner = payload.sub === data.pageData.user_id;
+			}
 		}
 	}
 
 	const generateQRCode = async () => {
 		try {
 			qrCodeDataUrl = await QRCode.toDataURL(pageUrl);
-			console.log('Generated QR Code Data URL:', qrCodeDataUrl);
 		} catch (err) {
-			console.error('Error generating QR code:', err);
+			modalStore.trigger({
+				type: 'alert',
+				title: 'Error',
+				body: 'Error generating QR code',
+				buttonTextConfirm: 'Close'
+			});
 		}
 	};
 
@@ -45,6 +58,16 @@
 	};
 
 	const showEditContentModal = () => {
+		if (!isOwner) {
+			modalStore.trigger({
+				type: 'alert',
+				title: 'Access Denied',
+				body: 'You do not have permission to edit this page.',
+				buttonTextConfirm: 'Close'
+			});
+			return;
+		}
+
 		const editContentModalSettings = {
 			type: 'prompt',
 			title: 'Edit Content',
@@ -62,16 +85,21 @@
 						});
 						if (updateResponse.ok) {
 							content = newContent;
-							console.log('Content updated successfully');
 						} else {
-							console.error(
-								'Error updating content:',
-								updateResponse.status,
-								updateResponse.statusText
-							);
+							modalStore.trigger({
+								type: 'alert',
+								title: 'Error',
+								body: 'Failed to update content',
+								buttonTextConfirm: 'Close'
+							});
 						}
 					} catch (err) {
-						console.error('Error updating content:', err);
+						modalStore.trigger({
+							type: 'alert',
+							title: 'Error',
+							body: 'Error updating content',
+							buttonTextConfirm: 'Close'
+						});
 					}
 				}
 			}
@@ -81,7 +109,14 @@
 </script>
 
 <section class="min-h-screen flex flex-col justify-between bg-surface-900 p-6">
-	<div class="flex-grow flex items-center justify-center">
+	<div class="flex-grow flex flex-col items-center justify-center">
+		{#if images.length}
+			<div class="flex flex-wrap gap-4 mb-6 justify-center">
+				{#each images as img}
+					<img src={img} alt="" class="w-40 h-40 object-cover rounded border border-primary-500" />
+				{/each}
+			</div>
+		{/if}
 		<p class="text-5xl font-light text-primary-300 text-center leading-relaxed">
 			{content}
 		</p>
@@ -91,8 +126,10 @@
 		<button on:click={showQRCodeModal} class="text-primary-300 hover:underline">
 			Show QR Code
 		</button>
-		<button on:click={showEditContentModal} class="text-primary-300 hover:underline">
-			Edit Content
-		</button>
+		{#if isOwner}
+			<button on:click={showEditContentModal} class="text-primary-300 hover:underline">
+				Edit Content
+			</button>
+		{/if}
 	</div>
 </section>

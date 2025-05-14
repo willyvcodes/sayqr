@@ -3,44 +3,76 @@
 	import { goto } from '$app/navigation';
 	import { getToastStore } from '@skeletonlabs/skeleton';
 	import { ProgressRadial } from '@skeletonlabs/skeleton';
-
-	const toastStore = getToastStore();
+	import { token } from '$lib/auth.js';
+	import { onMount } from 'svelte';
+	import ImageUploader from '$lib/components/ImageUploader.svelte';
 
 	let content = '';
 	let isLoading = false;
+	let images = [];
+	let imagePreviews = [];
+
+	const toastStore = getToastStore();
+
+	onMount(() => {
+		if (!$token) {
+			goto('/login');
+		}
+	});
+
+	const handleImagesUploaded = (newImages) => {
+		images = [...images, ...newImages];
+		imagePreviews = [...imagePreviews, ...newImages];
+	};
 
 	const handleSubmit = async () => {
+		if (!$token) {
+			toastStore.trigger({
+				message: 'Please log in to create a page',
+				background: 'variant-ghost-error',
+				autohide: true,
+				timeout: 5000
+			});
+			goto('/login');
+			return;
+		}
+
 		if (!content.trim()) {
-			showErrorToast('Content cannot be empty');
+			toastStore.trigger({
+				message: 'Content cannot be empty',
+				background: 'variant-ghost-error',
+				autohide: true,
+				timeout: 5000
+			});
 			return;
 		}
 
 		isLoading = true;
 
 		try {
-			const response = await create_new_page(content);
+			const response = await create_new_page(content, images);
 			if (response.ok) {
-				const result = await response.json();
-				const id = result._id;
-				goto(`/page/${id}`);
+				const page = await response.json();
+				console.log('Page created:', page._id);
+				goto(`/page/${page._id}`);
 			} else {
-				showErrorToast('Error creating page');
+				toastStore.trigger({
+					message: 'Error creating page',
+					background: 'variant-ghost-error',
+					autohide: true,
+					timeout: 5000
+				});
 			}
 		} catch (err) {
-			showErrorToast('Network error or bad request');
+			toastStore.trigger({
+				message: 'Network error or bad request',
+				background: 'variant-ghost-error',
+				autohide: true,
+				timeout: 5000
+			});
 		} finally {
 			isLoading = false;
 		}
-	};
-
-	const showErrorToast = (message) => {
-		const toastSettings = {
-			message,
-			background: 'variant-ghost-warning',
-			autohide: true,
-			timeout: 5000
-		};
-		toastStore.trigger(toastSettings);
 	};
 </script>
 
@@ -57,6 +89,18 @@
 			rows="8"
 			placeholder="Enter your text here..."
 		></textarea>
+		<ImageUploader onImagesUploaded={handleImagesUploaded} disabled={isLoading} />
+		{#if imagePreviews.length}
+			<div class="flex flex-wrap gap-2 mb-4">
+				{#each imagePreviews as img}
+					<img
+						src={img}
+						alt="Preview"
+						class="w-20 h-20 object-cover rounded border border-primary-500"
+					/>
+				{/each}
+			</div>
+		{/if}
 		<button
 			class="btn btn-primary bg-primary-500 hover:bg-primary-600 text-white py-3 px-8 rounded-md shadow-lg transition-transform transform hover:scale-105 w-full"
 			on:click={handleSubmit}

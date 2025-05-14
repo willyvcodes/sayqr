@@ -1,3 +1,7 @@
+<script>
+	import { token } from '$lib/auth.js';
+</script>
+
 <section
 	class="min-h-screen flex flex-col justify-between items-center bg-surface-900 text-white px-4"
 >
@@ -6,12 +10,29 @@
 		<p class="text-lg text-gray-300">
 			Quickly generate a page with your text and share it via QR code!
 		</p>
-		<a
-			href="/create"
-			class="btn btn-primary bg-primary-500 hover:bg-primary-600 text-white py-3 px-8 rounded-md shadow-md transition-transform transform hover:scale-105 inline-block"
-		>
-			Start Creating
-		</a>
+		{#if $token}
+			<a
+				href="/create"
+				class="btn btn-primary bg-primary-500 hover:bg-primary-600 text-white py-3 px-8 rounded-md shadow-md transition-transform transform hover:scale-105 inline-block"
+			>
+				Start Creating
+			</a>
+		{:else}
+			<div class="space-x-4">
+				<a
+					href="/login"
+					class="btn btn-primary bg-primary-500 hover:bg-primary-600 text-white py-3 px-8 rounded-md shadow-md transition-transform transform hover:scale-105 inline-block"
+				>
+					Login to Create
+				</a>
+				<a
+					href="/register"
+					class="btn btn-secondary bg-surface-700 hover:bg-surface-600 text-white py-3 px-8 rounded-md shadow-md transition-transform transform hover:scale-105 inline-block"
+				>
+					Register
+				</a>
+			</div>
+		{/if}
 	</div>
 	<div class="mb-6">
 		<a href="https://www.buymeacoffee.com/willyvcodes" target="_blank">
