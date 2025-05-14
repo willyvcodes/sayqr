@@ -2,7 +2,7 @@
 
 A modern web application that allows users to create custom pages with text and images, then instantly share them via QR codes. Perfect for events, classrooms, restaurants, or anywhere you need to share information quickly and elegantly.
 
-![SayQR Demo]()
+![SayQR Demo](https://sayqr.vercel.app/)
 
 ## ✨ Features
 
@@ -17,7 +17,7 @@ A modern web application that allows users to create custom pages with text and 
 
 ## 🚀 Live Demo
 
-- **Frontend**: [Coming Soon]
+- **Frontend**: [https://sayqr.vercel.app/]
 - **Backend API**: [worldwide-ardelle-willyv-aa70260a.koyeb.app/] [with https://www.koyeb.com/]
 
 ## 🛠️ Tech Stack
