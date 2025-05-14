@@ -1,6 +1,6 @@
 from fastapi import APIRouter
-from app.routes import pages
+from routes import pages, auth
 
 main_router = APIRouter()
-
+main_router.include_router(auth.router)
 main_router.include_router(pages.router)

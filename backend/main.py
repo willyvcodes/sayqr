@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.routes import base
+from routes import base
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
@@ -16,5 +16,5 @@ app.include_router(base.main_router)
 
 
 @app.get("/")
-def read_root():
-    return {"message": f"SayQR API is running"}
+async def root():
+    return {"app": "SayQR API", "status": "online", "version": "1.0"}
