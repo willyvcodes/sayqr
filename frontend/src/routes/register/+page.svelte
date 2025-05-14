@@ -38,9 +38,14 @@
 
 <div class="max-w-md mx-auto mt-16 p-8 bg-surface-700 rounded-lg shadow-lg">
 	<h1 class="text-2xl font-bold mb-6 text-center">Register</h1>
-	<input class="w-full mb-4 p-2 rounded" type="email" placeholder="Email" bind:value={email} />
 	<input
-		class="w-full mb-4 p-2 rounded"
+		class="w-full mb-4 p-2 rounded bg-surface-800 text-white placeholder-gray-400 border border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-600 shadow-inner"
+		type="email"
+		placeholder="Email"
+		bind:value={email}
+	/>
+	<input
+		class="w-full mb-4 p-2 rounded bg-surface-800 text-white placeholder-gray-400 border border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-600 shadow-inner"
 		type="password"
 		placeholder="Password"
 		bind:value={password}
